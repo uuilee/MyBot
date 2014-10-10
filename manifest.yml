@@ -1,11 +1,11 @@
 ---
 applications:
-- name: carrera-mybot
+- name: cloudracers-bot
   memory: 1024m
   instances: 1
-  host: bot01
+  host: cloudracers-host
   domain: beta.swisscloud.io
   path: target/carrera.mybot-1.0.war
   buildpack: https://github.com/cloudfoundry/java-buildpack
   services:
-    - data
+    - cloudracers-db
