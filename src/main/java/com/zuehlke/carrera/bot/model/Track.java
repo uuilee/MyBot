@@ -9,7 +9,13 @@ public class Track {
   private double initialPower = 100;
 
   public Track() {}
-
+  
+  public TrackSection nextUnknownSection() {
+    TrackSection trackSection = new TrackSection(SectionType.TURN, initialPower);
+    sections.add(trackSection);
+    return trackSection;
+  }
+  
   public TrackSection nextUnknownSection() {
     TrackSection trackSection = new TrackSection(SectionType.UNKNOWN, initialPower);
     sections.add(trackSection);
