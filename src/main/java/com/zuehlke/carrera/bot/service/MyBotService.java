@@ -10,6 +10,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +21,6 @@ import akka.actor.Props;
 
 import com.zuehlke.carrera.bot.actors.DispatcherActor;
 import com.zuehlke.carrera.bot.actors.PersisterActor;
-import com.zuehlke.carrera.bot.model.SectionType;
 import com.zuehlke.carrera.bot.model.SensorEvent;
 import com.zuehlke.carrera.bot.model.SpeedControl;
 import com.zuehlke.carrera.bot.model.Track;
@@ -31,7 +32,11 @@ import com.zuehlke.carrera.bot.model.TrackSection;
 @Service
 public class MyBotService {
 
+  private static final Logger logger = LoggerFactory.getLogger(MyBotService.class);
+  
   public static String currentDebugLog;
+
+  private double currentPower;
 
   private ActorSystem actorSystem;
   private ActorRef mainActor;
@@ -52,7 +57,7 @@ public class MyBotService {
   private final Client client;
   private final WebTarget relayRestApi;
 
-  private final float MAX_Y_ACCELERATION = 40;
+  private final float MAX_Y_ACCELERATION = 20;
   private final float MAX_Y_ACC_CHANGE = 30;
   private final float SENSITIVIY = 10;
   private final int REACTION_TIME = 2;
@@ -76,17 +81,18 @@ public class MyBotService {
    * Occurs when a race starts.
    */
   public void start() {
+    logger.info("Start Bot Service.");
     // TODO load reference track from database
-    referenceTracks = (new Track()).getSections();
-    referenceSectionNum = 0;
-    referenceTrackSection = referenceTracks.get(referenceSectionNum);
-    currentTrack = new Track();
-    currentTrackSection = currentTrack.nextUnknownSection();
+    // referenceTracks = (new Track()).getSections();
+    // referenceSectionNum = 0;
+    // referenceTrackSection = referenceTracks.get(referenceSectionNum);
+    // currentTrack = new Track();
+    // currentTrackSection = currentTrack.nextUnknownSection();
+    // lastTimeStamp = 0;
 
     // TODO Maybe send initial velocity here...
-    lastTimeStamp = 0;
-    // TODO Fetch last events from db
-    sendSpeedControl(100);
+    currentPower = 120;
+    sendSpeedControl(currentPower);
   }
 
   /**
@@ -94,84 +100,93 @@ public class MyBotService {
    * 
    * @param data
    */
-  public void handleSensorEvent(SensorEvent data) {
-
+  public double handleSensorEvent(SensorEvent data) {
+    logger.info("Received sensor data={}", data);
+    
     switch (data.getType()) {
       case CAR_SENSOR_DATA:
-        persisterActor.tell(data, null);
-        if (data.getTimeStamp() > lastTimeStamp) {
-          lastTimeStamp = data.getTimeStamp();
-          float accY = data.getAcc()[1];
-          float prevAccY = currentTrackSection.getLastAccY();
-          float accChange = prevAccY - accY;
-          if (Math.abs(prevAccY) < SENSITIVIY) {
-            // coming from a straight
-            if (accChange > MAX_Y_ACC_CHANGE) {
-              // going into a right turn
-              currentTrackSection = currentTrack.nextRightSection();
-              referenceTrackSection =
-                  referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
-            } else if (accChange < -MAX_Y_ACC_CHANGE) {
-              // going into a left turn
-              currentTrackSection = currentTrack.nextLeftSection();
-              referenceTrackSection =
-                  referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
-            }
-          } else {
-            // coming from a turn
-            if (Math.abs(accY) < SENSITIVIY) {
-              // going into a straight
-              currentTrackSection = currentTrack.nextStraightSection();
-              referenceTrackSection =
-                  referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
-            } else {
-              if (prevAccY > SENSITIVIY) {
-                // coming from a right turn
-                if (accChange < -2 * MAX_Y_ACC_CHANGE) {
-                  // going into a left turn
-                  currentTrackSection = currentTrack.nextLeftSection();
-                  referenceTrackSection =
-                      referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
-                }
-              } else if (prevAccY < -SENSITIVIY) {
-                // coming from a left turn
-                if (accChange > 2 * MAX_Y_ACC_CHANGE) {
-                  // going into a right turn
-                  currentTrackSection = currentTrack.nextRightSection();
-                  referenceTrackSection =
-                      referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
-                }
-              }
-
-            }
-          }
-
-          if (referenceTrackSection.getEvents().size() - currentTrackSection.getEvents().size() < REACTION_TIME) {
-            if (SectionType.STRAIGHT.equals(referenceTrackSection.getType())) {
-              sendSpeedControl(200);
-            } else {
-              sendSpeedControl(100);
-            }
-          }
-          currentTrackSection.getEvents().add(data);
-
-          // Sensor data from the mounted car sensor
-          // Simple, synchronous Bot implementation
-          // if (data.getAcc()[1] > MAX_Y_ACCELERATION) {
-          // sendSpeedControl(45);
-          // } else {
-          // sendSpeedControl(85);
-          // }
+        // persisterActor.tell(data, null);
+        // if (data.getTimeStamp() > lastTimeStamp) {
+        // lastTimeStamp = data.getTimeStamp();
+        // float accY = data.getAcc()[1];
+        // float prevAccY = currentTrackSection.getLastAccY();
+        // float accChange = prevAccY - accY;
+        // if (Math.abs(prevAccY) < SENSITIVIY) {
+        // // coming from a straight
+        // if (accChange > MAX_Y_ACC_CHANGE) {
+        // // going into a right turn
+        // currentTrackSection = currentTrack.nextRightSection();
+        // referenceTrackSection =
+        // referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
+        // } else if (accChange < -MAX_Y_ACC_CHANGE) {
+        // // going into a left turn
+        // currentTrackSection = currentTrack.nextLeftSection();
+        // referenceTrackSection =
+        // referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
+        // }
+        // } else {
+        // // coming from a turn
+        // if (Math.abs(accY) < SENSITIVIY) {
+        // // going into a straight
+        // currentTrackSection = currentTrack.nextStraightSection();
+        // referenceTrackSection =
+        // referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
+        // } else {
+        // if (prevAccY > SENSITIVIY) {
+        // // coming from a right turn
+        // if (accChange < -2 * MAX_Y_ACC_CHANGE) {
+        // // going into a left turn
+        // currentTrackSection = currentTrack.nextLeftSection();
+        // referenceTrackSection =
+        // referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
+        // }
+        // } else if (prevAccY < -SENSITIVIY) {
+        // // coming from a left turn
+        // if (accChange > 2 * MAX_Y_ACC_CHANGE) {
+        // // going into a right turn
+        // currentTrackSection = currentTrack.nextRightSection();
+        // referenceTrackSection =
+        // referenceTracks.get((referenceSectionNum + 1) % referenceTracks.size());
+        // }
+        // }
+        //
+        // }
+        // }
+        //
+        // if (referenceTrackSection.getEvents().size() - currentTrackSection.getEvents().size() <
+        // REACTION_TIME) {
+        // if (SectionType.STRAIGHT.equals(referenceTrackSection.getType())) {
+        // sendSpeedControl(200);
+        // } else {
+        // sendSpeedControl(100);
+        // }
+        // }
+        // currentTrackSection.getEvents().add(data);
+        //
+        // Sensor data from the mounted car sensor
+        // Simple, synchronous Bot implementation
+        if (Math.abs(data.getAcc()[1]) > MAX_Y_ACCELERATION) {
+          return currentPower;
+          //sendSpeedControl(currentPower / 2);
+        } else {
+          //sendSpeedControl(currentPower);
+          return currentPower;
         }
-
-        break;
+        // }
+        //break;
       case ROUND_PASSED:
+        logger.info("Round passed={}", data);
         // A round has been passed - generated event from the light barrier
         // TODO Handle round passed event...
-        referenceTracks = currentTrack.getSections();
-        currentTrack = new Track();
-
-        break;
+        // referenceTracks = currentTrack.getSections();
+        // currentTrack = new Track();
+        currentPower += 15;
+        //sendSpeedControl(currentPower);
+        return currentPower;
+        //break;
+      default:
+        logger.error("Received invalid data={}", data);
+        return 100;
     }
   }
 
