@@ -1,5 +1,7 @@
 package com.zuehlke.carrera.bot.actors;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +20,8 @@ public class PersisterActor extends UntypedActor {
       String log = "Persist SensorEvent=" + msg;
       MyBotService.currentDebugLog = log;
       logger.info(log);
+    } else if (msg instanceof List) {
+      // TODO store list to DB
     }
     
   }
