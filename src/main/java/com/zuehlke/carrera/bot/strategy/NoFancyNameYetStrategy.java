@@ -57,11 +57,25 @@ public class NoFancyNameYetStrategy implements BotStrategy {
 			accVectors.add(accVector);
 			sampleCount++;
 		}
+
+		public void setSampleCount(int sampleCount) {
+			this.sampleCount = sampleCount;
+		}
+	}
+
+	class EventLap extends Lap {
+
+		public EventLap() {
+			// interpreted map
+			// map to
+		}
 	}
 
 	class ForceVectorMap {
 		Lap[] laps;
 		Lap averageLap;
+		EventLap eventLap; // each sample contains gyro acc and turning event.
+							// could be used for prediction and decision
 		int numberOfLaps = 0;
 		int currentPosition = 0;
 		int averageSampleCount = 0;
@@ -74,6 +88,9 @@ public class NoFancyNameYetStrategy implements BotStrategy {
 		}
 
 		private void averageLaps() {
+			// maybe invalidate the last vectors because of straight and fix the
+			// samplerate to the least of all lap sample rates?? ==> wouldnt
+			// affect map that much
 			Vector gyro_vec = new Vector();
 			Vector acc_vec = new Vector();
 			for (Lap lap : laps) {
@@ -81,14 +98,41 @@ public class NoFancyNameYetStrategy implements BotStrategy {
 			}
 			averageSampleCount /= numberOfLaps; // TODO could get some float
 												// shit
+			averageLap = new Lap();
+			averageLap.setSampleCount(averageSampleCount);
+
+			// invalidating vectors to get the same vector count for all laps
+			// would make calculating indexes easier
 			for (int i = 0; i < averageSampleCount; i++) {
+				gyro_vec.x = gyro_vec.y = gyro_vec.z = 0.0f;
+				acc_vec.x = acc_vec.y = acc_vec.z = 0.0f;
 				for (Lap lap : laps) {
-					lap.gyroVectors.get((int) Math.floor(lap.sampleCount
-							/ averageSampleCount)); // TODO could get some float
-													// shit
+					gyro_vec.add(lap.gyroVectors.get((int) Math
+							.floor(lap.sampleCount / averageSampleCount))); // TODO
+																			// could
+																			// get
+																			// some
+																			// float
+																			// shit
+					acc_vec.add(lap.accVectors.get((int) Math
+							.floor(lap.sampleCount / averageSampleCount)));
 				}
 			}
 
+		}
+	}
+
+	class DistanceVectorMap {
+		Vector[] distanceVectors;
+		private final int index;
+
+		public DistanceVectorMap(int vectorCount, int correspondingIndex) {
+			distanceVectors = new Vector[vectorCount];
+			index = correspondingIndex;
+		}
+
+		public int getIndex() {
+			return index;
 		}
 	}
 
@@ -149,15 +193,19 @@ public class NoFancyNameYetStrategy implements BotStrategy {
 		boolean positionEstimated = false;
 		float minEuclideanDistAcc = -99.9f; // Current minimum of euclidean
 		float minEuclideanDistGyro = -99.9f; // distances calculated.
+		int index = 0;
+		int iteration = 0;
 		int minIndex = -1; // Index where we should hook into the model.
 
+		for (int i = 0; i < vectorMap.averageSampleCount; i++) {
+			// iterate through all vector pairs and find the "nearest" (twoNorm)
+		}
+		
 		while (!positionEstimated && minEuclideanDistAcc >= 0.0f
 				&& minEuclideanDistGyro >= 0.0f && minIndex >= 0) {
-
-			// 1. what logic for concluding that we found ourselves in the
-			// model??
-			// 2. need to retrospectively correct model when failure (== gyro
-			// overspins on z-axis??) occurs
+			// current
+			index++;
+			index %= vectorMap.averageSampleCount;
 			vectorMap.currentPosition = -99;
 		}
 	}
