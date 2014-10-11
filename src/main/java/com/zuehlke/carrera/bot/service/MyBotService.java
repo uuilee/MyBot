@@ -1,10 +1,6 @@
 package com.zuehlke.carrera.bot.service;
 
-import com.zuehlke.carrera.bot.model.SensorEvent;
-import com.zuehlke.carrera.bot.model.SpeedControl;
-import org.apache.log4j.spi.LoggerFactory;
-import org.slf4j.Logger;
-import org.springframework.stereotype.Service;
+import java.util.Date;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -12,7 +8,19 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.dispatch.Dispatcher;
+
+import com.zuehlke.carrera.bot.actors.DispatcherActor;
+import com.zuehlke.carrera.bot.actors.PersisterActor;
+import com.zuehlke.carrera.bot.model.SensorEvent;
+import com.zuehlke.carrera.bot.model.SpeedControl;
 
 /**
  * Contains the primary Bot AI.
@@ -21,6 +29,12 @@ import java.util.Date;
 @Service
 public class MyBotService {
 
+    public static String currentDebugLog;
+  
+    private ActorSystem actorSystem;
+    private ActorRef mainActor;
+    private ActorRef persisterActor;
+    
     private static final String baseUrl = "http://relay2.beta.swisscloud.io";
     private static final String teamId = "testTeam";        // TODO Put here your team id
     private static final String accessCode = "1337toor";    // TODO Put here your team access code
@@ -34,7 +48,12 @@ public class MyBotService {
     /**
      * Creates a new MyBotService
      */
-    public MyBotService(){
+    @Autowired
+    public MyBotService(ActorSystem actorSystem){
+        this.actorSystem = actorSystem;
+        mainActor = actorSystem.actorOf(Props.create(DispatcherActor.class), "dispatcherActor");
+        persisterActor = actorSystem.actorOf(Props.create(PersisterActor.class), "persisterActor");
+        
         client = ClientBuilder.newClient();
         relayRestApi = client.target(baseUrl).path("/ws/rest");
     }
@@ -53,6 +72,7 @@ public class MyBotService {
      * @param data
      */
     public void handleSensorEvent(SensorEvent data) {
+        persisterActor.tell(data, null);
         switch (data.getType()){
             case CAR_SENSOR_DATA:
                 // Sensor data from the mounted car sensor

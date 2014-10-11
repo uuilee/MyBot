@@ -34,6 +34,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.view.JstlView;
 import org.springframework.web.servlet.view.UrlBasedViewResolver;
 
+import akka.actor.ActorSystem;
+
 /**
  * @author Nicolas Regez
  * @since 24.02.2014
@@ -45,7 +47,7 @@ import org.springframework.web.servlet.view.UrlBasedViewResolver;
 @ComponentScan("com.zuehlke.carrera.bot")
 @PropertySource("classpath:application.properties")
 public class SpringDemoWebApplication extends WebMvcConfigurerAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(SpringDemoWebApplication.class);
+  private static final Logger logger = LoggerFactory.getLogger(SpringDemoWebApplication.class);
 
     @Autowired
     ApplicationContext ctx;
@@ -58,6 +60,12 @@ public class SpringDemoWebApplication extends WebMvcConfigurerAdapter {
         configurer.enable();
     }
 
+    @Bean(destroyMethod="shutdown")
+    public ActorSystem actorSystem() {
+      ActorSystem actorSystem = ActorSystem.create();
+      return actorSystem;
+    }
+    
     @Bean
     public UrlBasedViewResolver viewResolver() {
         UrlBasedViewResolver resolver = new UrlBasedViewResolver();

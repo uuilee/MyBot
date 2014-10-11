@@ -24,6 +24,12 @@ public class MyBotRestfulService {
         this.myBotService = myBotService;
     }
 
+    @RequestMapping(value = "log", method = RequestMethod.GET, produces = "text/plain")
+    @ResponseBody
+    public String getLog() {
+        return MyBotService.currentDebugLog;
+    }
+    
     @RequestMapping(value = "ping", method = RequestMethod.GET, produces = "text/plain")
     @ResponseBody
     public String getPing() {
