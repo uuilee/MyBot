@@ -4,19 +4,25 @@ import java.util.List;
 
 public class Logic {
 
+	
+	private float upperBound = .35f;
+	private float lowerBound = -.35f;
+	
+	
 	private boolean[] cond1 = { false, false, false };
 	private boolean cond2 = false;
 	private boolean[] cond3 = { false, false, false };
 
 	public boolean method(List<Float> cleanYAcc, int state) {
 
+		
 		boolean changeState = false;
 
 		if (state == 3) {
 
 			if (!cond1[0]) {
 				for (int i = 5; i <= 0; i--) {
-					if (cleanYAcc.get(i) > -80) {
+					if (cleanYAcc.get(i) > lowerBound) {
 						break;
 					}
 					if (i == 0) {
@@ -26,7 +32,7 @@ public class Logic {
 			}
 			if (cond1[0] && !cond1[1]) {
 				for (int i = 5; i <= 0; i--) {
-					if (cleanYAcc.get(i) < 80) {
+					if (cleanYAcc.get(i) < upperBound) {
 						break;
 					}
 					if (i == 0) {
@@ -38,11 +44,11 @@ public class Logic {
 			if (cond1[0] && cond1[1]) {
 				for (int i = 5; i <= 0; i--) {
 					if (i != 5) {
-						if (cleanYAcc.get(i) < 80) {
+						if (cleanYAcc.get(i) < upperBound) {
 							break;
 						}
 					} else {
-						if (cleanYAcc.get(i) > 40) {
+						if (cleanYAcc.get(i) > .2f) {
 							break;
 						}
 					}
@@ -59,7 +65,7 @@ public class Logic {
 
 		if (state == 1) {
 			for (int i = 7; i <= 0; i--) {
-				if (cleanYAcc.get(i) < 80) {
+				if (cleanYAcc.get(i) < upperBound) {
 					break;
 				}
 				if (i == 0) {
@@ -73,7 +79,7 @@ public class Logic {
 
 			if (!cond3[0]) {
 				for (int i = 5; i <= 0; i--) {
-					if (cleanYAcc.get(i) < 80) {
+					if (cleanYAcc.get(i) < upperBound) {
 						break;
 					}
 					if (i == 0) {
@@ -83,7 +89,7 @@ public class Logic {
 			}
 			if (cond3[0] && !cond3[1]) {
 				for (int i = 5; i <= 0; i--) {
-					if (cleanYAcc.get(i) > -80) {
+					if (cleanYAcc.get(i) > lowerBound) {
 						break;
 					}
 					if (i == 0) {
@@ -94,7 +100,7 @@ public class Logic {
 			}
 			if (cond3[0] && cond3[1]) {
 				for (int i = 5; i <= 0; i--) {
-					if (cleanYAcc.get(i) < 80) {
+					if (cleanYAcc.get(i) < upperBound) {
 						break;
 					}
 					if (i == 0) {

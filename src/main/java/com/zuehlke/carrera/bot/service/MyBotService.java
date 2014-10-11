@@ -34,6 +34,8 @@ public class MyBotService {
   private Track currTrack;
   private TrackSection currSection;
   private int currSectionIndex;
+  private float maxYAcc = 0;
+  private float minYAcc = 0;
 
   private SensorEventBuffer sensorEventBuffer = new SensorEventBuffer(15);
   private List<Float> cleanYAccs;
@@ -94,10 +96,18 @@ public class MyBotService {
           lastTimeStamp = data.getTimeStamp();
           if (currSection != null) { // Round 1
             currSection.getEvents().add(data);
+            if(data.getAcc()[1] > maxYAcc){
+            	maxYAcc = data.getAcc()[1];
+            }
+            if(data.getAcc()[1] > minYAcc){
+            	minYAcc = data.getAcc()[1];
+            }
           }
+  			//calc norm value
+  			float normVal = Math.min(Math.abs(minYAcc),maxYAcc) + (Math.abs(Math.abs(minYAcc)-maxYAcc))/2;
           sensorEventBuffer.push(data);
           if (sensorEventBuffer.size() >= SAMPLE_SIZE) {
-            cleanYAccs.add(sensorEventBuffer.getMedianYAcc());
+            cleanYAccs.add(sensorEventBuffer.getMedianYAcc(normVal));
             // wait for right, left, left then create new section
             if (logic.method(cleanYAccs, currSectionIndex)) {
               currSectionIndex = (currSectionIndex + 1) % 4;

@@ -26,7 +26,7 @@ public class SensorEventBuffer extends LinkedList<SensorEvent> {
     return true;
   }
   
-  public Float getMedianYAcc() {
+  public Float getMedianYAcc(float normValue) {
     // TODO: Find a nicer way to do this
     ArrayList<SensorEvent> sortedList = new ArrayList<>(this);
     Collections.sort(sortedList, new Comparator<SensorEvent>() {
@@ -35,7 +35,7 @@ public class SensorEventBuffer extends LinkedList<SensorEvent> {
         return (int) Math.ceil(o1.getAcc()[1] - o2.getAcc()[1]);
       }
     });
-    return sortedList.get((int)Math.floor(capacity / 2)).getAcc()[1];
+    return sortedList.get((int)Math.floor(capacity / 2)).getAcc()[1]/normValue;
   }
   
   public int getCapacity() {
