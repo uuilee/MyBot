@@ -45,27 +45,20 @@ public class DatabaseService {
 			throws SQLException {
 		if (statement == null)
 			statement = connectionToDB.createStatement();
-		float[] acc = new float[3];
-		float[] gyro = new float[3];
+		float[] acc = data.getAcc();
+		float[] gyro = data.getGyr();
 
 		statement
-				.executeUpdate("INSERT INTO `sensor_data`(`lap`, `timestamp`, `acc_x`, `acc_y`, `acc_z`, `gyro_x`, `gyro_y`, `gyro_z`, `power`) VALUES ("
-						+ Integer.toString(currentLap)
-						+ ","
-						+ Long.toString(data.getTimeStamp())
-						+ ","
-						+ Float.toString(acc[0])
-						+ ","
-						+ Float.toString(acc[1])
-						+ ","
-						+ Float.toString(acc[2])
-						+ ","
-						+ Float.toString(gyro[0])
-						+ ","
-						+ Float.toString(gyro[1])
-						+ ","
-						+ Float.toString(gyro[2])
-						+ ","
+				.executeUpdate("INSERT INTO `"
+						+ table_sensor_data
+						+ "`(`lap`, `timestamp`, `acc_x`, `acc_y`, `acc_z`, `gyro_x`, `gyro_y`, `gyro_z`, `power`) VALUES ("
+						+ Integer.toString(currentLap) + ","
+						+ Long.toString(data.getTimeStamp()) + ","
+						+ Float.toString(acc[0]) + "," + Float.toString(acc[1])
+						+ "," + Float.toString(acc[2]) + ","
+						+ Float.toString(gyro[0]) + ","
+						+ Float.toString(gyro[1]) + ","
+						+ Float.toString(gyro[2]) + ","
 						+ Integer.toString(power) + ")");
 		statement.close();
 	}
@@ -79,7 +72,8 @@ public class DatabaseService {
 		// http://sanjaal.com/java/252/java-object-serialization/java-object-serialization-and-deserialization-in-mysql-database/
 		String className = object.getClass().getName();
 		PreparedStatement pstmt = connectionToDB.prepareStatement(
-				"INSERT INTO track(object_name, object_value) VALUES(?,?)",
+				"INSERT INTO " + table_track
+						+ "(object_name, object_value) VALUES(?,?)",
 				Statement.RETURN_GENERATED_KEYS);
 		pstmt.setString(1, className);
 		pstmt.setObject(2, object);
@@ -101,7 +95,8 @@ public class DatabaseService {
 		// Code from following example:
 		// http://sanjaal.com/java/252/java-object-serialization/java-object-serialization-and-deserialization-in-mysql-database/
 		PreparedStatement pstmt = connectionToDB
-				.prepareStatement("SELECT object_value FROM track WHERE id = ?");
+				.prepareStatement("SELECT object_value FROM " + table_track
+						+ " WHERE id = ?");
 		pstmt.setLong(1, id);
 		ResultSet rs = pstmt.executeQuery();
 		rs.next();
