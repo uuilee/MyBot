@@ -1,5 +1,6 @@
 package com.zuehlke.carrera.bot.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.client.Client;
@@ -38,7 +39,7 @@ public class MyBotService {
   private float minYAcc = 0;
 
   private SensorEventBuffer sensorEventBuffer = new SensorEventBuffer(15);
-  private List<Float> cleanYAccs;
+  private List<Float> cleanYAccs = new ArrayList<Float>();
 
   private int currentRound; // For a simplified solution
   private double currentPower;
