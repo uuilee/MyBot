@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import akka.actor.UntypedActor;
 
 import com.zuehlke.carrera.bot.model.SensorEvent;
-import com.zuehlke.carrera.bot.service.MyBotService;
 
 public class PersisterActor extends UntypedActor {
 
@@ -18,7 +17,6 @@ public class PersisterActor extends UntypedActor {
   public void onReceive(Object msg) throws Exception {
     if (msg instanceof SensorEvent) {
       String log = "Persist SensorEvent=" + msg;
-      MyBotService.currentDebugLog = log;
       logger.info(log);
     } else if (msg instanceof List) {
       // TODO store list to DB
