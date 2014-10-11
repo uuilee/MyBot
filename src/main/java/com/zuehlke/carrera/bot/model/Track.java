@@ -16,11 +16,6 @@ public class Track {
     return trackSection;
   }
   
-  public TrackSection nextUnknownSection() {
-    TrackSection trackSection = new TrackSection(SectionType.UNKNOWN, initialPower);
-    sections.add(trackSection);
-    return trackSection;
-  }
   
   public TrackSection nextStraightSection() {
     TrackSection trackSection = new TrackSection(SectionType.STRAIGHT, initialPower);

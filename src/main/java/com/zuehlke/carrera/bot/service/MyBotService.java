@@ -13,10 +13,10 @@ import akka.actor.ActorSystem;
 
 import com.zuehlke.carrera.bot.model.SensorEvent;
 import com.zuehlke.carrera.bot.strategy.BotStrategy;
+import com.zuehlke.carrera.bot.strategy.DynamicPatternRecognitionStrategy;
+import com.zuehlke.carrera.bot.strategy.IncreasingConstants;
 
-/**
- * Contains the primary Bot AI. Created by paba on 10/5/14.
- */
+
 @Service
 public class MyBotService {
 
@@ -31,14 +31,11 @@ public class MyBotService {
 
   BotStrategy strategy;
   
-  /**
-   * Creates a new MyBotService
-   */
   @Autowired
   public MyBotService(ActorSystem actorSystem) {
     client = ClientBuilder.newClient();
     relayRestApi = client.target(baseUrl).path("/ws/rest");
-    strategy = new DynamicPatternRecognitionStrategy();
+    strategy = new IncreasingConstants();
   }
 
   /**
@@ -55,6 +52,7 @@ public class MyBotService {
    */
   public double handleSensorEvent(SensorEvent data) {
     logger.info("Received sensor data={}", data);
+    return strategy.processSensorEvent(data);
 
   }
 }
