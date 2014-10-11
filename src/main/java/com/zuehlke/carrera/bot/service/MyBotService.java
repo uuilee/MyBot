@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import akka.actor.ActorSystem;
 
+import com.zuehlke.carrera.bot.model.Logic;
 import com.zuehlke.carrera.bot.model.SensorEvent;
 import com.zuehlke.carrera.bot.model.Track;
 import com.zuehlke.carrera.bot.model.TrackSection;
@@ -26,6 +27,8 @@ public class MyBotService {
 
   private static final Logger logger = LoggerFactory.getLogger(MyBotService.class);
 
+  private Logic logic = new Logic();
+  
   private List<TrackSection> refSections;
   private TrackSection refSection;
   private Track currTrack;
@@ -96,7 +99,7 @@ public class MyBotService {
           if (sensorEventBuffer.size() >= SAMPLE_SIZE) {
             cleanYAccs.add(sensorEventBuffer.getMedianYAcc());
             // wait for right, left, left then create new section
-            if (Logic.method(cleanYAccs, currSectionIndex)) {
+            if (logic.method(cleanYAccs, currSectionIndex)) {
               currSectionIndex = (currSectionIndex + 1) % 4;
               currSection = currTrack.nextUnknownSection();
               if (currSectionIndex == 0) {
@@ -111,7 +114,11 @@ public class MyBotService {
                   return 120;
                 }
               }
-              return 250;
+              if (currSectionIndex == 1) {
+                return 180;
+              } else {
+                return 250;
+              }
             }
           }
         }
